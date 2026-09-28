@@ -4,6 +4,17 @@ import { createCampground } from '../api/campgrounds';
 import { FlashContext } from '../context/FlashContext';
 import { validateCampground } from '../utils/validation';
 
+/* Field component (module scope so inputs aren't remounted on every render) */
+const Field = ({ label, id, error, children }) => (
+    <div style={{ marginBottom: '1.2rem' }}>
+        <label htmlFor={id} style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: 'var(--color-text)', marginBottom: '0.35rem' }}>
+            {label}
+        </label>
+        {children}
+        {error && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', margin: 0 }}>{error}</p>}
+    </div>
+);
+
 const CampgroundNew = () => {
     const navigate = useNavigate();
     const { showFlash } = useContext(FlashContext);
@@ -15,9 +26,10 @@ const CampgroundNew = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (e) => {
-        const next = { ...formData, [e.target.name]: e.target.value };
-        setFormData(next);
-        setErrors(validateCampground(next));
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Validation runs on submit; just clear this field's stale error while typing.
+        if (errors[name]) setErrors(({ [name]: _cleared, ...rest }) => rest);
     };
 
     const handleFileChange = (e) => {
@@ -58,17 +70,6 @@ const CampgroundNew = () => {
             setSubmitting(false);
         }
     };
-
-    /* Field component */
-    const Field = ({ label, id, error, children }) => (
-        <div style={{ marginBottom: '1.2rem' }}>
-            <label htmlFor={id} style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: 'var(--color-text)', marginBottom: '0.35rem' }}>
-                {label}
-            </label>
-            {children}
-            {error && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', margin: 0 }}>{error}</p>}
-        </div>
-    );
 
     const inputStyle = (hasError) => ({
         width: '100%', boxSizing: 'border-box',

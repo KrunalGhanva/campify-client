@@ -6,6 +6,17 @@ import { AuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { validateCampground } from '../utils/validation';
 
+/* Field component (module scope so inputs aren't remounted on every render) */
+const Field = ({ label, id: fid, error, children }) => (
+    <div style={{ marginBottom: '1.2rem' }}>
+        <label htmlFor={fid} style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: 'var(--color-text)', marginBottom: '0.35rem' }}>
+            {label}
+        </label>
+        {children}
+        {error && <p style={{ color: '#ef4444', fontSize: '0.73rem', margin: '0.3rem 0 0' }}>{error}</p>}
+    </div>
+);
+
 const CampgroundEdit = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -49,9 +60,10 @@ const CampgroundEdit = () => {
     }, [id, currentUser, navigate, showFlash]);
 
     const handleChange = (e) => {
-        const next = { ...formData, [e.target.name]: e.target.value };
-        setFormData(next);
-        setErrors(validateCampground(next));
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Validation runs on submit; just clear this field's stale error while typing.
+        if (errors[name]) setErrors(({ [name]: _cleared, ...rest }) => rest);
     };
 
     const handleFileChange = (e) => {
@@ -114,16 +126,6 @@ const CampgroundEdit = () => {
         transition: 'border-color 0.15s, box-shadow 0.15s',
         boxShadow: focused === field ? `0 0 0 3px ${hasError ? 'rgba(239,68,68,.1)' : 'rgba(45,106,79,.12)'}` : 'none',
     });
-
-    const Field = ({ label, id: fid, error, children }) => (
-        <div style={{ marginBottom: '1.2rem' }}>
-            <label htmlFor={fid} style={{ display: 'block', fontWeight: 600, fontSize: '0.82rem', color: 'var(--color-text)', marginBottom: '0.35rem' }}>
-                {label}
-            </label>
-            {children}
-            {error && <p style={{ color: '#ef4444', fontSize: '0.73rem', margin: '0.3rem 0 0' }}>{error}</p>}
-        </div>
-    );
 
     return (
         <div style={{ minHeight: '80vh', background: 'var(--c-snow)' }}>
