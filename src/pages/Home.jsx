@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/home.css';
+import ChatWidget from '../components/ChatWidget';
 
 /* ── Scroll-reveal hook ───────────────────────────────────── */
 function useReveal(threshold = 0.15) {
@@ -269,6 +270,9 @@ const Home = () => {
             }}>
                 © {new Date().getFullYear()} Campify — Discover the wild. Share the journey.
             </footer>
+
+            {/* ── AI Camp Assistant ── */}
+            <ChatWidget />
         </div>
     );
 };
