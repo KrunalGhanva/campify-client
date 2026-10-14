@@ -47,15 +47,22 @@ const CampgroundShow = () => {
                 container: mapContainerRef.current,
                 style: 'mapbox://styles/mapbox/outdoors-v12',
                 center: campground.geometry.coordinates,
-                zoom: 10
+                zoom: 10,
+                projection: 'mercator'
             });
             map.addControl(new mapboxgl.NavigationControl());
+            // Popup built from DOM nodes + textContent so titles/locations can't inject HTML.
+            const popupEl = document.createElement('div');
+            const popupTitle = document.createElement('strong');
+            popupTitle.style.cssText = 'font-family:Inter,sans-serif;color:#1F2421';
+            popupTitle.textContent = campground.title;
+            const popupLoc = document.createElement('p');
+            popupLoc.style.cssText = 'font-size:0.78rem;color:#5F625B;margin:4px 0 0';
+            popupLoc.textContent = campground.location;
+            popupEl.append(popupTitle, popupLoc);
             new mapboxgl.Marker({ color: '#A64B1B' })
                 .setLngLat(campground.geometry.coordinates)
-                .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(
-                    `<strong style="font-family:Inter,sans-serif;color:#1F2421">${campground.title}</strong>
-                     <p style="font-size:0.78rem;color:#5F625B;margin:4px 0 0">${campground.location}</p>`
-                ))
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setDOMContent(popupEl))
                 .addTo(map);
             mapRef.current = map;
         }

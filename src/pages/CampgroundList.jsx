@@ -37,11 +37,24 @@ const CampgroundList = () => {
                 container: mapContainerRef.current,
                 style: 'mapbox://styles/mapbox/outdoors-v12',   // outdoors style
                 center: [-103.59179687498357, 40.66995747013945],
-                zoom: 3
+                zoom: 3,
+                projection: 'mercator'   // flat map instead of Mapbox v3's default globe
             });
             map.addControl(new mapboxgl.NavigationControl());
 
             map.on('load', () => {
+                // Zoom to show every campground that has a location.
+                const points = campgrounds
+                    .filter(c => c.geometry?.type === 'Point' && c.geometry.coordinates?.length === 2)
+                    .map(c => c.geometry.coordinates);
+                if (points.length) {
+                    const bounds = points.reduce(
+                        (b, pt) => b.extend(pt),
+                        new mapboxgl.LngLatBounds(points[0], points[0])
+                    );
+                    map.fitBounds(bounds, { padding: 60, maxZoom: 10, duration: 0 });
+                }
+
                 map.addSource('campgrounds', {
                     type: 'geojson',
                     data: {
@@ -80,12 +93,20 @@ const CampgroundList = () => {
                     const coords = e.features[0].geometry.coordinates.slice();
                     while (Math.abs(e.lngLat.lng - coords[0]) > 180) coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
 
+                    // Build the popup with DOM nodes + textContent so titles/locations can't inject HTML.
                     const wrap = document.createElement('div');
                     wrap.style.cssText = 'font-family:Inter,sans-serif;min-width:160px;';
-                    wrap.innerHTML = `
-                        <strong style="font-size:0.9rem;color:#1F2421">${title || 'Campground'}</strong>
-                        <p style="font-size:0.75rem;color:#5F625B;margin:4px 0">${location || ''}</p>
-                        <a href="/campgrounds/${encodeURIComponent(id)}" style="font-size:0.78rem;color:#2F5D46;font-weight:600;">View details</a>`;
+                    const strong = document.createElement('strong');
+                    strong.style.cssText = 'font-size:0.9rem;color:#1F2421';
+                    strong.textContent = title || 'Campground';
+                    const loc = document.createElement('p');
+                    loc.style.cssText = 'font-size:0.75rem;color:#5F625B;margin:4px 0';
+                    loc.textContent = location || '';
+                    const link = document.createElement('a');
+                    link.href = `/campgrounds/${encodeURIComponent(id)}`;
+                    link.style.cssText = 'font-size:0.78rem;color:#2F5D46;font-weight:600;';
+                    link.textContent = 'View details';
+                    wrap.append(strong, loc, link);
 
                     new mapboxgl.Popup({ offset: 12 }).setLngLat(coords).setDOMContent(wrap).addTo(map);
                 });
