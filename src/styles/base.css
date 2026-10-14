@@ -1,0 +1,39 @@
+/* Base — reset, typography, layout helpers. Loaded after Bootstrap so it wins. */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: auto; -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; }
+body {
+  margin: 0; min-width: 320px;
+  font-family: var(--font-ui); font-size: var(--text-sm); line-height: 1.5;
+  color: var(--ink); background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-ui); color: var(--ink); line-height: 1.2; letter-spacing: -0.01em; font-weight: 600; margin: 0; }
+h1 { font-size: var(--text-xl); }
+h2 { font-size: var(--text-lg); }
+h3 { font-size: var(--text-md); }
+p  { margin: 0; }
+a  { color: var(--forest); text-underline-offset: 3px; }
+a:hover { color: var(--forest-hover); }
+img { max-width: 100%; }
+::placeholder { color: #75776F; opacity: 1; }
+:focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--r-sm); }
+.display { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; }
+.muted { color: var(--ink-muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: var(--s-3); top: -48px; z-index: 1200; background: var(--ink); color: #fff; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); }
+.skip-link:focus { top: var(--s-3); color: #fff; }
+
+.wrap { width: 100%; max-width: calc(var(--content-w) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.page { padding-top: var(--s-6); padding-bottom: var(--s-8); }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s-4); margin-bottom: var(--s-5); }
+.page-head h1 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-xl); letter-spacing: -0.02em; }
+.page-head p { color: var(--ink-muted); margin-top: var(--s-1); }
+@media (min-width: 768px) { .page-head h1 { font-size: var(--text-2xl); } }
+.stack { display: flex; flex-direction: column; gap: var(--s-4); }
+.row-gap { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
+.divider { border: 0; border-top: 1px solid var(--line); margin: var(--s-5) 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

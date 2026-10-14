@@ -1,48 +1,9 @@
 import { useEffect, useState, useCallback, useRef, useContext } from 'react';
-import { Link } from 'react-router-dom';
 import { getAdminCampgrounds, deleteAdminCampground } from '../../api/admin';
 import { FlashContext } from '../../context/FlashContext';
+import { Button, Table, Pagination, Modal, EmptyState, Loading, Icon } from '../../components/ui';
 
 const LIMIT = 10;
-
-const ConfirmModal = ({ camp, onConfirm, onClose }) => (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,.5)' }}>
-        <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-                <div className="modal-header">
-                    <h5 className="modal-title text-danger">Delete Campground</h5>
-                    <button type="button" className="btn-close" onClick={onClose} />
-                </div>
-                <div className="modal-body">
-                    <p>Delete <strong>{camp.title}</strong>? All its photos and reviews will also be removed.</p>
-                    <p className="text-danger fw-semibold mb-0">This cannot be undone.</p>
-                </div>
-                <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-danger" onClick={onConfirm}>Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const Pagination = ({ page, pages, onChange }) => (
-    <nav>
-        <ul className="pagination pagination-sm mb-0 justify-content-end">
-            <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => onChange(page - 1)}>‹</button>
-            </li>
-            {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
-                    <button className="page-link" onClick={() => onChange(p)}>{p}</button>
-                </li>
-            ))}
-            <li className={`page-item ${page >= pages ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => onChange(page + 1)}>›</button>
-            </li>
-        </ul>
-    </nav>
-);
 
 const AdminCampgrounds = () => {
     const { showFlash } = useContext(FlashContext);
@@ -97,21 +58,37 @@ const AdminCampgrounds = () => {
 
     return (
         <div>
-            {confirmCamp && (
-                <ConfirmModal camp={confirmCamp} onConfirm={handleDelete} onClose={() => setConfirmCamp(null)} />
-            )}
+            <Modal
+                open={!!confirmCamp}
+                onClose={() => setConfirmCamp(null)}
+                title="Delete campground?"
+                footer={
+                    <>
+                        <Button onClick={() => setConfirmCamp(null)}>Cancel</Button>
+                        <Button variant="danger" onClick={handleDelete}>Delete</Button>
+                    </>
+                }
+            >
+                {confirmCamp && (
+                    <p>Delete <strong>{confirmCamp.title}</strong>? Its photos and reviews are removed too. This can’t be undone.</p>
+                )}
+            </Modal>
 
-            <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                <h1 className="admin-page-title mb-0">Manage Campgrounds</h1>
-                <span className="badge bg-secondary fs-6">{total} total</span>
+            <div className="page-head">
+                <div>
+                    <h1>Campgrounds</h1>
+                    <p>{total} total</p>
+                </div>
             </div>
 
-            <div className="card admin-card mb-3">
-                <div className="card-body py-2">
+            <div className="toolbar">
+                <div className="input-icon toolbar__search">
+                    <Icon name="search" size={16} />
                     <input
                         type="search"
-                        className="form-control form-control-sm"
-                        placeholder="Search by title or location…"
+                        className="input"
+                        aria-label="Search campgrounds"
+                        placeholder="Search by title or location"
                         value={pendingSearch}
                         onChange={handleSearch}
                         id="admin-camp-search"
@@ -119,92 +96,58 @@ const AdminCampgrounds = () => {
                 </div>
             </div>
 
-            <div className="card admin-card">
-                <div className="card-body p-0">
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0 admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Campground</th>
-                                    <th className="d-none d-md-table-cell">Location</th>
-                                    <th className="d-none d-sm-table-cell">Author</th>
-                                    <th>Price</th>
-                                    <th className="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="5" className="text-center py-4">
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status" />
-                                    </td></tr>
-                                ) : campgrounds.length === 0 ? (
-                                    <tr><td colSpan="5" className="text-center py-4 text-muted">No campgrounds found.</td></tr>
-                                ) : (
-                                    campgrounds.map(c => (
-                                        <tr key={c._id}>
-                                            <td>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    {c.images?.[0]?.url ? (
-                                                        <img
-                                                            src={c.images[0].url.replace('/upload', '/upload/w_40,h_40,c_fill')}
-                                                            alt=""
-                                                            className="admin-table-avatar rounded"
-                                                        />
-                                                    ) : (
-                                                        <div className="admin-table-avatar rounded bg-secondary d-flex align-items-center justify-content-center text-white" style={{ fontSize: '1rem' }}>🏕</div>
-                                                    )}
-                                                    <span className="fw-semibold" style={{ fontSize: '0.85rem' }}>{c.title}</span>
-                                                </div>
-                                            </td>
-                                            <td className="d-none d-md-table-cell" style={{ fontSize: '0.82rem', color: '#6b7280' }}>
-                                                {c.location}
-                                            </td>
-                                            <td className="d-none d-sm-table-cell" style={{ fontSize: '0.82rem' }}>
-                                                {c.author?.username || '—'}
-                                            </td>
-                                            <td style={{ fontSize: '0.85rem' }}>${c.price}</td>
-                                            <td>
-                                                <div className="d-flex gap-1 justify-content-end">
-                                                    <Link
-                                                        to={`/campgrounds/${c._id}`}
-                                                        className="btn btn-xs btn-outline-secondary"
-                                                        target="_blank"
-                                                        title="View on site"
-                                                    >
-                                                        👁
-                                                    </Link>
-                                                    <Link
-                                                        to={`/campgrounds/${c._id}/edit`}
-                                                        className="btn btn-xs btn-outline-primary"
-                                                        target="_blank"
-                                                        title="Edit"
-                                                    >
-                                                        ✏
-                                                    </Link>
-                                                    <button
-                                                        className="btn btn-xs btn-danger"
-                                                        onClick={() => setConfirmCamp(c)}
-                                                        disabled={busyId === c._id}
-                                                        title="Delete"
-                                                    >
-                                                        🗑
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {pages > 1 && (
-                    <div className="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <small className="text-muted">Page {page} of {pages} · {total} campgrounds</small>
-                        <Pagination page={page} pages={pages} onChange={setPage} />
-                    </div>
-                )}
-            </div>
+            {loading ? (
+                <Loading label="Loading campgrounds…" />
+            ) : campgrounds.length === 0 ? (
+                <EmptyState icon="tent" title="No campgrounds found">Try a different search.</EmptyState>
+            ) : (
+                <Table label="Campgrounds">
+                    <thead>
+                        <tr>
+                            <th scope="col">Campground</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Author</th>
+                            <th scope="col" className="num">Price</th>
+                            <th scope="col"><span className="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {campgrounds.map(c => (
+                            <tr key={c._id}>
+                                <td>
+                                    <div className="cell-media">
+                                        {c.images?.[0]?.url ? (
+                                            <img src={c.images[0].url.replace('/upload', '/upload/w_80,h_80,c_fill')} alt="" className="list-rows__img" />
+                                        ) : (
+                                            <span className="list-rows__img list-rows__img--empty"><Icon name="image" size={18} /></span>
+                                        )}
+                                        <strong>{c.title}</strong>
+                                    </div>
+                                </td>
+                                <td className="muted">{c.location}</td>
+                                <td>{c.author?.username || '—'}</td>
+                                <td className="num">${c.price}</td>
+                                <td className="actions">
+                                    <Button size="sm" variant="ghost" iconOnly aria-label={`View ${c.title} on site`}
+                                        to={`/campgrounds/${c._id}`} target="_blank" rel="noreferrer">
+                                        <Icon name="external" size={14} />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" iconOnly aria-label={`Edit ${c.title}`}
+                                        to={`/campgrounds/${c._id}/edit`} target="_blank" rel="noreferrer">
+                                        <Icon name="edit" size={14} />
+                                    </Button>
+                                    <Button size="sm" variant="danger-ghost" iconOnly aria-label={`Delete ${c.title}`}
+                                        loading={busyId === c._id} onClick={() => setConfirmCamp(c)} disabled={busyId === c._id}>
+                                        <Icon name="trash" size={14} />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            )}
+
+            <Pagination page={page} pages={pages} total={total} onChange={setPage} label="Campgrounds pagination" />
         </div>
     );
 };

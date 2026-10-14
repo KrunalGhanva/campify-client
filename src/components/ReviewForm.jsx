@@ -3,6 +3,7 @@ import { createReview } from '../api/reviews';
 import { FlashContext } from '../context/FlashContext';
 import StarRating from './StarRating';
 import { validateReview } from '../utils/validation';
+import { Button, Textarea, Icon } from './ui';
 
 const MAX_PHOTOS = 6;
 const MAX_FILE_MB = 5;
@@ -69,50 +70,40 @@ const ReviewForm = ({ campgroundId, onReviewAdded }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="review-form mb-4">
-            {/* Star picker */}
-            <div className="mb-3">
-                <label className="form-label fw-semibold">Your Rating</label>
-                <div>
-                    <StarRating
-                        rating={rating}
-                        setRating={(v) => {
-                            setRating(v);
-                            setErrors(c => ({ ...c, rating: undefined }));
-                        }}
-                        size="lg"
-                        name={`rating-${campgroundId}`}
-                    />
-                </div>
-                {errors.rating && <div className="text-danger small mt-1">{errors.rating}</div>}
-            </div>
-
-            {/* Body */}
-            <div className="mb-3">
-                <label className="form-label fw-semibold" htmlFor="review-body">Your Review</label>
-                <textarea
-                    id="review-body"
-                    className={`form-control ${errors.body ? 'is-invalid' : ''}`}
-                    rows={3}
-                    maxLength={1000}
-                    placeholder="Share your experience…"
-                    value={body}
-                    onChange={e => {
-                        setBody(e.target.value);
-                        setErrors(c => ({ ...c, body: undefined }));
+        <form onSubmit={handleSubmit} className="stack" noValidate>
+            <div className="field">
+                <span className="field__label">Your rating</span>
+                <StarRating
+                    rating={rating}
+                    setRating={(v) => {
+                        setRating(v);
+                        setErrors(c => ({ ...c, rating: undefined }));
                     }}
+                    size="lg"
+                    name={`rating-${campgroundId}`}
                 />
-                <div className="d-flex justify-content-between">
-                    {errors.body
-                        ? <div className="invalid-feedback d-block">{errors.body}</div>
-                        : <span />}
-                    <small className="text-muted ms-auto">{body.length}/1000</small>
-                </div>
+                {errors.rating && (
+                    <div className="field__error" role="alert"><Icon name="alert" size={14} /><span>{errors.rating}</span></div>
+                )}
             </div>
 
-            {/* Photo upload */}
-            <div className="mb-3">
-                <label className="form-label fw-semibold">Add Photos (optional, max {MAX_PHOTOS})</label>
+            <Textarea
+                label="Your review"
+                id="review-body"
+                rows={4}
+                maxLength={1000}
+                placeholder="What was it like? Terrain, noise, facilities, who you'd bring."
+                value={body}
+                error={errors.body}
+                hint={`${body.length}/1000`}
+                onChange={e => {
+                    setBody(e.target.value);
+                    setErrors(c => ({ ...c, body: undefined }));
+                }}
+            />
+
+            <div className="field">
+                <span className="field__label">Photos <span className="field__opt">(optional, up to {MAX_PHOTOS})</span></span>
                 {photos.length < MAX_PHOTOS && (
                     <>
                         <input
@@ -120,43 +111,32 @@ const ReviewForm = ({ campgroundId, onReviewAdded }) => {
                             type="file"
                             accept="image/jpeg,image/png,image/jpg"
                             multiple
-                            className="d-none"
+                            className="sr-only"
+                            tabIndex={-1}
                             onChange={handleFileChange}
                         />
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm d-block mb-2"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <i className="bi bi-camera me-1"></i>
-                            Choose Photos
-                        </button>
+                        <div>
+                            <Button size="sm" icon="camera" onClick={() => fileInputRef.current?.click()}>Choose photos</Button>
+                        </div>
                     </>
                 )}
                 {photos.length > 0 && (
-                    <div className="review-photo-previews">
+                    <ul className="thumbs">
                         {photos.map((p, i) => (
-                            <div key={i} className="review-photo-thumb">
+                            <li key={i} className="thumb">
                                 <img src={p.preview} alt={`Preview ${i + 1}`} />
-                                <button
-                                    type="button"
-                                    className="review-photo-remove"
-                                    onClick={() => removePhoto(i)}
-                                    aria-label="Remove photo"
-                                >
-                                    ×
+                                <button type="button" className="thumb__x" onClick={() => removePhoto(i)} aria-label={`Remove photo ${i + 1}`}>
+                                    <Icon name="x" size={12} />
                                 </button>
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 )}
             </div>
 
-            <button className="btn btn-success px-4" disabled={submitting}>
-                {submitting ? (
-                    <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Posting…</>
-                ) : 'Post Review'}
-            </button>
+            <div>
+                <Button type="submit" variant="primary" loading={submitting}>{submitting ? 'Posting…' : 'Post review'}</Button>
+            </div>
         </form>
     );
 };

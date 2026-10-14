@@ -1,28 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminStats } from '../../api/admin';
-
-/* ── tiny helpers ─────────────────────────────────────────────── */
-const KpiCard = ({ icon, label, value, color, to }) => (
-    <div className="col-sm-6 col-xl-3">
-        <div className={`admin-kpi-card admin-kpi-card--${color}`}>
-            <div className="admin-kpi-card__icon">{icon}</div>
-            <div className="admin-kpi-card__body">
-                <div className="admin-kpi-card__value">
-                    {value ?? <span className="placeholder col-4 bg-secondary" />}
-                </div>
-                <div className="admin-kpi-card__label">{label}</div>
-            </div>
-            {to && (
-                <Link to={to} className="admin-kpi-card__link stretched-link" aria-label={`Go to ${label}`} />
-            )}
-        </div>
-    </div>
-);
+import StarRating from '../../components/StarRating';
+import { Button, Table, Badge, Alert, Skeleton, EmptyState } from '../../components/ui';
 
 const avatar = (user) =>
     user?.avatar?.url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || '?')}&background=random&size=32`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || '?')}&background=E8EFE9&color=2F5D46&size=48`;
+
+const Section = ({ title, to, loading, empty, children }) => (
+    <section className="dash-section">
+        <div className="row-between">
+            <h2 className="section-h">{title}</h2>
+            <Button size="sm" variant="ghost" to={to}>View all</Button>
+        </div>
+        {loading ? <Skeleton variant="block" /> : empty ? <EmptyState icon="info" title="Nothing yet" /> : children}
+    </section>
+);
 
 /* ── Dashboard page ───────────────────────────────────────────── */
 const AdminDashboard = () => {
@@ -37,155 +31,99 @@ const AdminDashboard = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    if (error) return <div className="alert alert-danger m-3">{error}</div>;
+    if (error) {
+        return <Alert title="Couldn’t load the dashboard" onRetry={() => window.location.reload()}>{error}</Alert>;
+    }
 
     const stats = data?.stats || {};
+    const kpis = [
+        { label: 'Users',       value: stats.users,       to: '/admin/users' },
+        { label: 'Campgrounds', value: stats.campgrounds, to: '/admin/campgrounds' },
+        { label: 'Reviews',     value: stats.reviews,     to: '/admin/reviews' },
+        { label: 'Admins',      value: stats.admins },
+    ];
+
+    const recentUsers = data?.recentUsers || [];
+    const recentCamps = data?.recentCampgrounds || [];
+    const recentReviews = data?.recentReviews || [];
 
     return (
-        <div>
-            <h1 className="admin-page-title">Dashboard Overview</h1>
-
-            {/* ── KPI Cards ─────────────────────────────────── */}
-            <div className="row g-3 mb-4">
-                <KpiCard icon="👥" label="Total Users"      value={loading ? null : stats.users}      color="indigo" to="/admin/users" />
-                <KpiCard icon="🏕️" label="Campgrounds"     value={loading ? null : stats.campgrounds} color="emerald" to="/admin/campgrounds" />
-                <KpiCard icon="⭐" label="Reviews"          value={loading ? null : stats.reviews}     color="amber" to="/admin/reviews" />
-                <KpiCard icon="🛡️" label="Admins"          value={loading ? null : stats.admins}      color="rose" />
-            </div>
-
-            <div className="row g-3">
-                {/* Recent Registrations */}
-                <div className="col-lg-6">
-                    <div className="card admin-card h-100">
-                        <div className="card-header admin-card__header d-flex align-items-center justify-content-between">
-                            <span>Recent Registrations</span>
-                            <Link to="/admin/users" className="btn btn-sm btn-outline-primary">View all</Link>
-                        </div>
-                        <div className="card-body p-0">
-                            {loading ? (
-                                <div className="p-3 text-center text-muted">Loading…</div>
-                            ) : (
-                                <table className="table table-hover mb-0 admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Role</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data?.recentUsers || []).map(u => (
-                                            <tr key={u._id}>
-                                                <td>
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <img src={avatar(u)} alt="" className="admin-table-avatar" />
-                                                        <div>
-                                                            <div className="fw-semibold" style={{ fontSize: '0.85rem' }}>{u.username}</div>
-                                                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>{u.email || '—'}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className={`badge ${u.role === 'admin' ? 'bg-danger' : 'bg-secondary'}`}>
-                                                        {u.role}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recent Campgrounds */}
-                <div className="col-lg-6">
-                    <div className="card admin-card h-100">
-                        <div className="card-header admin-card__header d-flex align-items-center justify-content-between">
-                            <span>Recent Campgrounds</span>
-                            <Link to="/admin/campgrounds" className="btn btn-sm btn-outline-primary">View all</Link>
-                        </div>
-                        <div className="card-body p-0">
-                            {loading ? (
-                                <div className="p-3 text-center text-muted">Loading…</div>
-                            ) : (
-                                <table className="table table-hover mb-0 admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Title</th>
-                                            <th>Author</th>
-                                            <th>Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data?.recentCampgrounds || []).map(c => (
-                                            <tr key={c._id}>
-                                                <td style={{ maxWidth: 160 }}>
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        {c.images?.[0]?.url && (
-                                                            <img src={c.images[0].url.replace('/upload', '/upload/w_36,h_36,c_fill')} alt="" className="admin-table-avatar rounded" />
-                                                        )}
-                                                        <span className="text-truncate" style={{ fontSize: '0.85rem' }}>{c.title}</span>
-                                                    </div>
-                                                </td>
-                                                <td style={{ fontSize: '0.85rem' }}>{c.author?.username || '—'}</td>
-                                                <td style={{ fontSize: '0.85rem' }}>${c.price}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recent Reviews */}
-                <div className="col-12">
-                    <div className="card admin-card">
-                        <div className="card-header admin-card__header d-flex align-items-center justify-content-between">
-                            <span>Recent Reviews</span>
-                            <Link to="/admin/reviews" className="btn btn-sm btn-outline-primary">View all</Link>
-                        </div>
-                        <div className="card-body p-0">
-                            {loading ? (
-                                <div className="p-3 text-center text-muted">Loading…</div>
-                            ) : (
-                                <table className="table table-hover mb-0 admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Author</th>
-                                            <th>Rating</th>
-                                            <th>Preview</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data?.recentReviews || []).map(r => (
-                                            <tr key={r._id}>
-                                                <td>
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <img src={avatar(r.author)} alt="" className="admin-table-avatar" />
-                                                        <span style={{ fontSize: '0.85rem' }}>{r.author?.username}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span style={{ color: '#f59e0b' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-                                                </td>
-                                                <td style={{ maxWidth: 240, fontSize: '0.8rem' }} className="text-muted text-truncate">
-                                                    {r.body}
-                                                </td>
-                                                <td style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
+        <div className="stack dash">
+            <div className="page-head">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>What’s happening across Campify.</p>
                 </div>
             </div>
+
+            <dl className="stats stats--4">
+                {kpis.map(k => (
+                    <div key={k.label} className="stats__item">
+                        <dt>{k.to ? <Link to={k.to}>{k.label}</Link> : k.label}</dt>
+                        <dd>{loading ? <Skeleton width="48px" /> : (k.value ?? 0)}</dd>
+                    </div>
+                ))}
+            </dl>
+
+            <div className="dash__grid">
+                <Section title="Recent registrations" to="/admin/users" loading={loading} empty={!recentUsers.length}>
+                    <Table label="Recent registrations" className="table-ui--compact">
+                        <thead><tr><th scope="col">User</th><th scope="col">Role</th></tr></thead>
+                        <tbody>
+                            {recentUsers.map(u => (
+                                <tr key={u._id}>
+                                    <td>
+                                        <div className="cell-media">
+                                            <img src={avatar(u)} alt="" className="avatar avatar--md" />
+                                            <div className="list-rows__text">
+                                                <strong>{u.username}</strong>
+                                                <span className="muted">{u.email || '—'}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><Badge tone={u.role === 'admin' ? 'forest' : 'neutral'}>{u.role}</Badge></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Section>
+
+                <Section title="Recent campgrounds" to="/admin/campgrounds" loading={loading} empty={!recentCamps.length}>
+                    <Table label="Recent campgrounds" className="table-ui--compact">
+                        <thead><tr><th scope="col">Title</th><th scope="col">Author</th><th scope="col" className="num">Price</th></tr></thead>
+                        <tbody>
+                            {recentCamps.map(c => (
+                                <tr key={c._id}>
+                                    <td><strong>{c.title}</strong></td>
+                                    <td>{c.author?.username || '—'}</td>
+                                    <td className="num">${c.price}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Section>
+            </div>
+
+            <Section title="Recent reviews" to="/admin/reviews" loading={loading} empty={!recentReviews.length}>
+                <Table label="Recent reviews">
+                    <thead><tr><th scope="col">Author</th><th scope="col">Rating</th><th scope="col">Preview</th><th scope="col">Date</th></tr></thead>
+                    <tbody>
+                        {recentReviews.map(r => (
+                            <tr key={r._id}>
+                                <td>
+                                    <div className="cell-media">
+                                        <img src={avatar(r.author)} alt="" className="avatar avatar--md" />
+                                        <strong>{r.author?.username}</strong>
+                                    </div>
+                                </td>
+                                <td><StarRating rating={r.rating} readOnly size="sm" /></td>
+                                <td className="cell-clip muted">{r.body}</td>
+                                <td className="muted">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            </Section>
         </div>
     );
 };

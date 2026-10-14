@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { FlashContext } from '../context/FlashContext';
 import AuthForm from '../components/AuthForm';
 import { validateLogin } from '../utils/validation';
+import { Input, Alert } from '../components/ui';
 
 const Login = () => {
     const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -39,40 +40,29 @@ const Login = () => {
 
     return (
         <AuthForm 
-            title="Login" 
+            title="Log in" 
             onSubmit={handleSubmit} 
             linkTo="/register" 
-            linkText="Register here"
+            linkText="New to Campify? Create an account"
             submitting={submitting}
         >
             {isSuspended && (
-                <div className="alert alert-danger d-flex align-items-start gap-2 mb-3 py-2" role="alert">
-                    <span style={{ fontSize: '1.1rem' }}>🚫</span>
-                    <div>
-                        <strong>Account suspended.</strong><br />
-                        <small>Your account has been suspended by an administrator. Contact support if you believe this is a mistake.</small>
-                    </div>
-                </div>
+                <Alert title="Account suspended">
+                    An administrator has suspended your account. Contact support if you believe this is a mistake.
+                </Alert>
             )}
-            <div className="mb-3">
-                <label className="form-label" htmlFor="loginIdentifier">Username, Email, or Mobile</label>
-                <input className={`form-control ${errors.loginIdentifier ? 'is-invalid' : ''}`} type="text" id="loginIdentifier" name="loginIdentifier" autoFocus
-                    value={loginIdentifier} onChange={e => {
-                        setLoginIdentifier(e.target.value);
-                        setErrors(validateLogin({ loginIdentifier: e.target.value, password }));
-                    }} />
-                {errors.loginIdentifier && <div className="invalid-feedback">{errors.loginIdentifier}</div>}
-            </div>
-
-            <div className="mb-3">
-                <label className="form-label" htmlFor="password">Password</label>
-                <input className={`form-control ${errors.password ? 'is-invalid' : ''}`} type="password" id="password" name="password"
-                    value={password} onChange={e => {
-                        setPassword(e.target.value);
-                        setErrors(validateLogin({ loginIdentifier, password: e.target.value }));
-                    }} />
-                {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-            </div>
+            <Input label="Username, email or mobile" type="text" id="loginIdentifier" name="loginIdentifier" autoFocus
+                autoComplete="username" error={errors.loginIdentifier}
+                value={loginIdentifier} onChange={e => {
+                    setLoginIdentifier(e.target.value);
+                    setErrors(validateLogin({ loginIdentifier: e.target.value, password }));
+                }} />
+            <Input label="Password" type="password" id="password" name="password"
+                autoComplete="current-password" error={errors.password}
+                value={password} onChange={e => {
+                    setPassword(e.target.value);
+                    setErrors(validateLogin({ loginIdentifier, password: e.target.value }));
+                }} />
         </AuthForm>
     );
 };

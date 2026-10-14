@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { FlashContext } from '../context/FlashContext';
 import AuthForm from '../components/AuthForm';
 import { validateRegistration } from '../utils/validation';
+import { Input } from '../components/ui';
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -46,51 +47,35 @@ const Register = () => {
 
     return (
         <AuthForm 
-            title="Register" 
+            title="Create account" 
             onSubmit={handleSubmit} 
             linkTo="/login" 
-            linkText="Already have an account? Login here"
+            linkText="Already have an account? Log in"
             submitting={submitting}
         >
-            <div className="mb-3">
-                <label className="form-label" htmlFor="username">Username</label>
-                <input className={`form-control ${errors.username ? 'is-invalid' : ''}`} type="text" id="username" name="username" maxLength="30" autoFocus
-                    value={username} onChange={e => {
-                        setUsername(e.target.value);
-                        setErrors(validateRegistration({ email, mobile, username: e.target.value, password }));
-                    }} />
-                {errors.username && <div className="invalid-feedback">{errors.username}</div>}
-            </div>
-            
-            <p className="text-muted small mb-2 mt-4 text-center">Provide an Email OR Mobile Number (or both)</p>
-            
-            <div className="mb-3">
-                <label className="form-label" htmlFor="email">Email</label>
-                <input className={`form-control ${errors.email ? 'is-invalid' : ''}`} type="email" id="email" name="email"
-                    value={email} onChange={e => {
-                        setEmail(e.target.value);
-                        setErrors(validateRegistration({ email: e.target.value, mobile, username, password }));
-                    }} />
-                {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-            </div>
-            <div className="mb-3">
-                <label className="form-label" htmlFor="mobile">Mobile Number</label>
-                <input className={`form-control ${errors.mobile ? 'is-invalid' : ''}`} type="tel" id="mobile" name="mobile"
-                    value={mobile} onChange={e => {
-                        setMobile(e.target.value);
-                        setErrors(validateRegistration({ email, mobile: e.target.value, username, password }));
-                    }} />
-                {errors.mobile && <div className="invalid-feedback">{errors.mobile}</div>}
-            </div>
-            <div className="mb-3">
-                <label className="form-label" htmlFor="password">Password</label>
-                <input className={`form-control ${errors.password ? 'is-invalid' : ''}`} type="password" id="password" name="password"
-                    value={password} onChange={e => {
-                        setPassword(e.target.value);
-                        setErrors(validateRegistration({ email, mobile, username, password: e.target.value }));
-                    }} />
-                {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-            </div>
+            <Input label="Username" type="text" id="username" name="username" maxLength="30" autoFocus
+                autoComplete="username" error={errors.username}
+                value={username} onChange={e => {
+                    setUsername(e.target.value);
+                    setErrors(validateRegistration({ email, mobile, username: e.target.value, password }));
+                }} />
+            <Input label="Email" type="email" id="email" name="email" autoComplete="email"
+                hint="Provide an email or a mobile number, or both." error={errors.email}
+                value={email} onChange={e => {
+                    setEmail(e.target.value);
+                    setErrors(validateRegistration({ email: e.target.value, mobile, username, password }));
+                }} />
+            <Input label="Mobile number" type="tel" id="mobile" name="mobile" autoComplete="tel" error={errors.mobile}
+                value={mobile} onChange={e => {
+                    setMobile(e.target.value);
+                    setErrors(validateRegistration({ email, mobile: e.target.value, username, password }));
+                }} />
+            <Input label="Password" type="password" id="password" name="password" autoComplete="new-password"
+                hint="6 to 128 characters." error={errors.password}
+                value={password} onChange={e => {
+                    setPassword(e.target.value);
+                    setErrors(validateRegistration({ email, mobile, username, password: e.target.value }));
+                }} />
         </AuthForm>
     );
 };

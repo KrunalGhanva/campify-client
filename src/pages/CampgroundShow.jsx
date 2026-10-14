@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getCampground, deleteCampground } from '../api/campgrounds';
@@ -8,8 +8,8 @@ import { FlashContext } from '../context/FlashContext';
 import ReviewList from '../components/ReviewList';
 import ReviewForm from '../components/ReviewForm';
 import LoadingSpinner from '../components/LoadingSpinner';
-
-const stars = (r) => '★'.repeat(Math.round(r)) + '☆'.repeat(5 - Math.round(r));
+import StarRating from '../components/StarRating';
+import { Button, Modal, Alert, Icon } from '../components/ui';
 
 const CampgroundShow = () => {
     const { id } = useParams();
@@ -50,11 +50,11 @@ const CampgroundShow = () => {
                 zoom: 10
             });
             map.addControl(new mapboxgl.NavigationControl());
-            new mapboxgl.Marker({ color: '#e85d04' })
+            new mapboxgl.Marker({ color: '#A64B1B' })
                 .setLngLat(campground.geometry.coordinates)
                 .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(
-                    `<strong style="font-family:Inter,sans-serif">${campground.title}</strong>
-                     <p style="font-size:0.78rem;color:#6b7280;margin:4px 0 0">${campground.location}</p>`
+                    `<strong style="font-family:Inter,sans-serif;color:#1F2421">${campground.title}</strong>
+                     <p style="font-size:0.78rem;color:#5F625B;margin:4px 0 0">${campground.location}</p>`
                 ))
                 .addTo(map);
             mapRef.current = map;
@@ -75,7 +75,7 @@ const CampgroundShow = () => {
         }
     };
 
-    if (loading)     return <LoadingSpinner label="Loading campground..." />;
+    if (loading)     return <LoadingSpinner label="Loading campground…" />;
     if (!campground) return null;
 
     const images     = campground.images || [];
@@ -86,146 +86,86 @@ const CampgroundShow = () => {
         : null;
 
     return (
-        <div style={{ minHeight: '80vh' }}>
+        <div>
+            <Modal
+                open={showDeleteModal}
+                onClose={() => !deleting && setShowDeleteModal(false)}
+                title="Delete this campground?"
+                footer={
+                    <>
+                        <Button onClick={() => setShowDeleteModal(false)} disabled={deleting}>Cancel</Button>
+                        <Button variant="danger" loading={deleting} onClick={handleDelete}>{deleting ? 'Deleting…' : 'Delete campground'}</Button>
+                    </>
+                }
+            >
+                <p>
+                    This permanently removes <strong>{campground.title}</strong>, its photos and all of its reviews. This can’t be undone.
+                </p>
+            </Modal>
 
-            {/* ── Delete Confirmation Modal ── */}
-            {showDeleteModal && (
-                <div
-                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1055, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
-                    onClick={() => setShowDeleteModal(false)}
-                >
-                    <div
-                        style={{ background: '#fff', borderRadius: '1rem', padding: '2rem', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,.25)' }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: '#ef4444', marginBottom: '0.5rem' }}>Delete Campground?</h3>
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                            This will permanently remove <strong>"{campground.title}"</strong>, all its photos and all reviews. This cannot be undone.
-                        </p>
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button onClick={() => setShowDeleteModal(false)}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '999px', border: '1.5px solid var(--color-border)', background: '#fff', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
-                                Cancel
-                            </button>
-                            <button onClick={handleDelete} disabled={deleting}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '999px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 700, fontFamily: 'var(--font-body)', opacity: deleting ? 0.7 : 1 }}>
-                                {deleting ? 'Deleting…' : 'Yes, Delete'}
-                            </button>
-                        </div>
-                    </div>
+            <nav aria-label="Breadcrumb" className="crumbs">
+                <Button variant="ghost" size="sm" icon="arrow-left" to="/campgrounds">All campgrounds</Button>
+            </nav>
+
+            <div className="page-head">
+                <div>
+                    <h1>{campground.title}</h1>
+                    <p className="row-gap">
+                        <span><Icon name="pin" size={14} /> {campground.location}</span>
+                        {campground.author?.username && <span>· Listed by {campground.author.username}</span>}
+                    </p>
                 </div>
-            )}
+                {isAuthor && (
+                    <div className="row-gap">
+                        <Button icon="edit" to={`/campgrounds/${campground._id}/edit`}>Edit</Button>
+                        <Button variant="danger-ghost" icon="trash" onClick={() => setShowDeleteModal(true)}>Delete</Button>
+                    </div>
+                )}
+            </div>
 
-            {/* ── Image Gallery Hero ── */}
             {images.length > 0 && (
-                <div style={{ position: 'relative', background: 'var(--c-slate)', marginBottom: '2rem', borderRadius: '1rem', overflow: 'hidden', maxHeight: 480 }}>
-                    <img
-                        src={images[activeImg]?.url}
-                        alt={campground.title}
-                        style={{ width: '100%', maxHeight: 480, objectFit: 'cover', display: 'block', transition: 'opacity 0.25s' }}
-                    />
-                    {/* Gradient overlay */}
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(27,40,56,0.7) 0%, transparent 50%)' }} />
-
-                    {/* Title overlay */}
-                    <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem' }}>
-                        <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 900, fontSize: 'clamp(1.5rem,4vw,2.4rem)', color: '#fff', letterSpacing: '-0.04em', margin: 0, lineHeight: 1.1 }}>
-                            {campground.title}
-                        </h1>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
-                            📍 {campground.location}
-                        </p>
-                    </div>
-
-                    {/* Thumbnail nav */}
+                <figure className="gallery">
+                    <img className="gallery__main" src={images[activeImg]?.url} alt={`${campground.title}, photo ${activeImg + 1} of ${images.length}`} />
                     {images.length > 1 && (
-                        <div style={{ position: 'absolute', bottom: '1.25rem', right: '1.25rem', display: 'flex', gap: '0.4rem' }}>
+                        <ul className="thumbs gallery__thumbs">
                             {images.map((img, i) => (
-                                <button key={img._id} onClick={() => setActiveImg(i)}
-                                    style={{
-                                        width: 42, height: 42, borderRadius: '0.4rem', overflow: 'hidden',
-                                        border: i === activeImg ? '2px solid #fff' : '2px solid rgba(255,255,255,0.3)',
-                                        padding: 0, cursor: 'pointer',
-                                    }}
-                                >
-                                    <img src={img.url.replace('/upload', '/upload/w_84,h_84,c_fill')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </button>
+                                <li key={img._id} className={`thumb thumb--lg${i === activeImg ? ' thumb--on' : ''}`}>
+                                    <button type="button" className="thumb__btn" onClick={() => setActiveImg(i)}
+                                        aria-label={`Show photo ${i + 1}`} aria-pressed={i === activeImg}>
+                                        <img src={img.url.replace('/upload', '/upload/w_160,h_160,c_fill')} alt="" />
+                                    </button>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     )}
-                </div>
+                </figure>
             )}
 
-            {/* ── Main grid ── */}
-            <div className="row g-4">
-                {/* ── Left column ── */}
-                <div className="col-lg-7">
-
-                    {/* Info card */}
-                    <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '1.75rem', marginBottom: '1.5rem' }}>
-
-                        {/* Rating + price row */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.2rem' }}>
-                            {avgRating !== null ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{ color: '#f59e0b', fontSize: '1.1rem' }}>{stars(avgRating)}</span>
-                                    <span style={{ fontWeight: 800, color: 'var(--c-slate)', fontSize: '1.05rem' }}>{avgRating.toFixed(1)}</span>
-                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
+            <div className="show">
+                <div className="show__main">
+                    <section aria-labelledby="about-h" className="stack">
+                        <h2 id="about-h" className="sr-only">About</h2>
+                        <div className="facts">
+                            <div>
+                                <div className="facts__k">Price</div>
+                                <div className="facts__v">${campground.price}<span className="muted"> / night</span></div>
+                            </div>
+                            <div>
+                                <div className="facts__k">Rating</div>
+                                <div className="facts__v">
+                                    {avgRating !== null ? (
+                                        <span className="row-gap"><StarRating rating={Math.round(avgRating)} readOnly size="sm" /> {avgRating.toFixed(1)}</span>
+                                    ) : <span className="muted">No reviews yet</span>}
                                 </div>
-                            ) : (
-                                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>No reviews yet</span>
-                            )}
-                            <div style={{
-                                background: 'var(--c-alpine-pale)', color: 'var(--c-alpine-green)',
-                                borderRadius: '999px', padding: '0.3rem 1rem',
-                                fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.1rem',
-                            }}>
-                                ${campground.price}<span style={{ fontSize: '0.7rem', fontWeight: 500, opacity: 0.7 }}>/night</span>
                             </div>
                         </div>
+                        <p className="prose">{campground.description || 'No description provided.'}</p>
+                    </section>
 
-                        {images.length === 0 && (
-                            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 900, fontSize: '1.6rem', color: 'var(--c-slate)', letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>
-                                {campground.title}
-                            </h1>
-                        )}
+                    <hr className="divider" />
 
-                        <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.75, fontSize: '0.95rem', marginBottom: '1.25rem' }}>
-                            {campground.description || <em>No description provided.</em>}
-                        </p>
-
-                        {/* Meta chips */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-                            <span style={{ background: 'var(--c-snow)', border: '1px solid var(--color-border)', borderRadius: '999px', padding: '0.3rem 0.85rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                                📍 {campground.location}
-                            </span>
-                            {campground.author?.username && (
-                                <span style={{ background: 'var(--c-snow)', border: '1px solid var(--color-border)', borderRadius: '999px', padding: '0.3rem 0.85rem', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                                    👤 by {campground.author.username}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Author actions */}
-                        {isAuthor && (
-                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--color-border)' }}>
-                                <Link to={`/campgrounds/${campground._id}/edit`}
-                                    style={{ flex: 1, textAlign: 'center', background: 'var(--c-alpine-pale)', color: 'var(--c-alpine-green)', borderRadius: '999px', padding: '0.6rem', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
-                                    ✏ Edit Campground
-                                </Link>
-                                <button onClick={() => setShowDeleteModal(true)}
-                                    style={{ flex: 1, background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '999px', padding: '0.6rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
-                                    🗑 Delete
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Reviews section */}
-                    <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '1.75rem' }}>
-                        <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.2rem', color: 'var(--c-slate)', letterSpacing: '-0.02em', marginBottom: '1.25rem' }}>
-                            Reviews {reviews.length > 0 && <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--color-text-muted)' }}>· {reviews.length}</span>}
-                        </h2>
+                    <section aria-labelledby="reviews-h">
+                        <h2 id="reviews-h" className="section-h">Reviews {reviews.length > 0 && <span className="muted">({reviews.length})</span>}</h2>
                         <ReviewList
                             reviews={reviews}
                             campgroundId={id}
@@ -237,55 +177,30 @@ const CampgroundShow = () => {
                                 }));
                             }}
                         />
-                    </div>
+                    </section>
                 </div>
 
-                {/* ── Right column ── */}
-                <div className="col-lg-5">
-                    {/* Map */}
+                <aside className="show__side stack">
                     {mapToken ? (
-                        <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '1rem', overflow: 'hidden', marginBottom: '1.5rem' }}>
-                            <div ref={mapContainerRef} style={{ height: 280 }} aria-label="Location map" />
-                            <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                                📍 {campground.location}
-                            </div>
+                        <div>
+                            <div ref={mapContainerRef} className="map-box map-box--sm" role="region" aria-label="Location map" />
                         </div>
                     ) : (
-                        <div className="alert alert-warning mb-3">Map unavailable — configure <code>VITE_MAPBOX_TOKEN</code>.</div>
+                        <Alert variant="warning">Map unavailable. Set <code>VITE_MAPBOX_TOKEN</code> to enable it.</Alert>
                     )}
 
-                    {/* Review form */}
-                    {currentUser && (
-                        <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '1.75rem' }}>
-                            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.05rem', color: 'var(--c-slate)', marginBottom: '1.2rem', letterSpacing: '-0.02em' }}>
-                                ✍ Leave a Review
-                            </h3>
+                    <section className="panel" aria-labelledby="leave-h">
+                        <h2 id="leave-h" className="section-h">Leave a review</h2>
+                        {currentUser ? (
                             <ReviewForm campgroundId={id} onReviewAdded={fetchCampground} />
-                        </div>
-                    )}
-
-                    {!currentUser && (
-                        <div style={{
-                            background: 'var(--c-alpine-pale)', borderRadius: '1rem', padding: '1.5rem',
-                            textAlign: 'center', border: '1px solid rgba(45,106,79,0.2)',
-                        }}>
-                            <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>💬</div>
-                            <p style={{ color: 'var(--c-alpine-green)', fontWeight: 600, marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-                                Sign in to leave a review
-                            </p>
-                            <Link to="/login" style={{ background: 'var(--c-alpine-green)', color: '#fff', borderRadius: '999px', padding: '0.55rem 1.4rem', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem' }}>
-                                Log In
-                            </Link>
-                        </div>
-                    )}
-
-                    {/* Back link */}
-                    <div style={{ marginTop: '1.25rem' }}>
-                        <Link to="/campgrounds" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                            ← Back to all campgrounds
-                        </Link>
-                    </div>
-                </div>
+                        ) : (
+                            <div className="stack">
+                                <p className="muted">Log in to rate this campground and share photos.</p>
+                                <div><Button variant="primary" to="/login">Log in</Button></div>
+                            </div>
+                        )}
+                    </section>
+                </aside>
             </div>
         </div>
     );

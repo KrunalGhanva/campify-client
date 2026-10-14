@@ -1,59 +1,14 @@
 import { useEffect, useState, useCallback, useContext } from 'react';
 import { getAdminReviews, deleteAdminReview } from '../../api/admin';
 import { FlashContext } from '../../context/FlashContext';
+import StarRating from '../../components/StarRating';
+import { Button, Table, Pagination, Modal, EmptyState, Loading, Icon } from '../../components/ui';
 
 const LIMIT = 10;
 
 const avatar = (user) =>
     user?.avatar?.url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || '?')}&background=random&size=32`;
-
-const Stars = ({ n }) => (
-    <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>
-        {'★'.repeat(n)}{'☆'.repeat(5 - n)}
-    </span>
-);
-
-const ConfirmModal = ({ review, onConfirm, onClose }) => (
-    <div className="modal fade show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,.5)' }}>
-        <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-                <div className="modal-header">
-                    <h5 className="modal-title text-danger">Delete Review</h5>
-                    <button type="button" className="btn-close" onClick={onClose} />
-                </div>
-                <div className="modal-body">
-                    <p>Delete this review by <strong>{review.author?.username}</strong>?</p>
-                    <blockquote className="blockquote border-start border-3 ps-3 text-muted" style={{ fontSize: '0.85rem' }}>
-                        {review.body?.slice(0, 120)}{review.body?.length > 120 ? '…' : ''}
-                    </blockquote>
-                </div>
-                <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                    <button className="btn btn-danger" onClick={onConfirm}>Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const Pagination = ({ page, pages, onChange }) => (
-    <nav>
-        <ul className="pagination pagination-sm mb-0 justify-content-end">
-            <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => onChange(page - 1)}>‹</button>
-            </li>
-            {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
-                    <button className="page-link" onClick={() => onChange(p)}>{p}</button>
-                </li>
-            ))}
-            <li className={`page-item ${page >= pages ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => onChange(page + 1)}>›</button>
-            </li>
-        </ul>
-    </nav>
-);
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || '?')}&background=E8EFE9&color=2F5D46&size=48`;
 
 const AdminReviews = () => {
     const { showFlash } = useContext(FlashContext);
@@ -98,85 +53,76 @@ const AdminReviews = () => {
 
     return (
         <div>
-            {confirmReview && (
-                <ConfirmModal
-                    review={confirmReview}
-                    onConfirm={handleDelete}
-                    onClose={() => setConfirmReview(null)}
-                />
-            )}
-
-            <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                <h1 className="admin-page-title mb-0">Manage Reviews</h1>
-                <span className="badge bg-secondary fs-6">{total} total</span>
-            </div>
-
-            <div className="card admin-card">
-                <div className="card-body p-0">
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0 admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Author</th>
-                                    <th>Rating</th>
-                                    <th className="d-none d-md-table-cell">Review</th>
-                                    <th className="d-none d-lg-table-cell">Photos</th>
-                                    <th className="d-none d-lg-table-cell">Date</th>
-                                    <th className="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="6" className="text-center py-4">
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status" />
-                                    </td></tr>
-                                ) : reviews.length === 0 ? (
-                                    <tr><td colSpan="6" className="text-center py-4 text-muted">No reviews found.</td></tr>
-                                ) : (
-                                    reviews.map(r => (
-                                        <tr key={r._id}>
-                                            <td>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <img src={avatar(r.author)} alt="" className="admin-table-avatar" />
-                                                    <span style={{ fontSize: '0.85rem' }} className="fw-semibold">{r.author?.username || '—'}</span>
-                                                </div>
-                                            </td>
-                                            <td><Stars n={r.rating} /></td>
-                                            <td className="d-none d-md-table-cell" style={{ maxWidth: 260, fontSize: '0.8rem', color: '#6b7280' }}>
-                                                <span className="text-truncate d-block">{r.body}</span>
-                                            </td>
-                                            <td className="d-none d-lg-table-cell" style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
-                                                {r.images?.length || 0} photo{r.images?.length !== 1 ? 's' : ''}
-                                            </td>
-                                            <td className="d-none d-lg-table-cell" style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}
-                                            </td>
-                                            <td>
-                                                <div className="d-flex justify-content-end">
-                                                    <button
-                                                        className="btn btn-xs btn-danger"
-                                                        onClick={() => setConfirmReview(r)}
-                                                        disabled={busyId === r._id}
-                                                        title="Delete review"
-                                                    >
-                                                        🗑
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {pages > 1 && (
-                    <div className="card-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <small className="text-muted">Page {page} of {pages} · {total} reviews</small>
-                        <Pagination page={page} pages={pages} onChange={setPage} />
+            <Modal
+                open={!!confirmReview}
+                onClose={() => setConfirmReview(null)}
+                title="Delete review?"
+                footer={
+                    <>
+                        <Button onClick={() => setConfirmReview(null)}>Cancel</Button>
+                        <Button variant="danger" onClick={handleDelete}>Delete</Button>
+                    </>
+                }
+            >
+                {confirmReview && (
+                    <div className="stack">
+                        <p>Delete this review by <strong>{confirmReview.author?.username}</strong>?</p>
+                        <blockquote className="quote">
+                            {confirmReview.body?.slice(0, 120)}{confirmReview.body?.length > 120 ? '…' : ''}
+                        </blockquote>
                     </div>
                 )}
+            </Modal>
+
+            <div className="page-head">
+                <div>
+                    <h1>Reviews</h1>
+                    <p>{total} total</p>
+                </div>
             </div>
+
+            {loading ? (
+                <Loading label="Loading reviews…" />
+            ) : reviews.length === 0 ? (
+                <EmptyState icon="chat" title="No reviews found">Reviews will appear here as campers post them.</EmptyState>
+            ) : (
+                <Table label="Reviews">
+                    <thead>
+                        <tr>
+                            <th scope="col">Author</th>
+                            <th scope="col">Rating</th>
+                            <th scope="col">Review</th>
+                            <th scope="col">Photos</th>
+                            <th scope="col">Date</th>
+                            <th scope="col"><span className="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {reviews.map(r => (
+                            <tr key={r._id}>
+                                <td>
+                                    <div className="cell-media">
+                                        <img src={avatar(r.author)} alt="" className="avatar avatar--md" />
+                                        <strong>{r.author?.username || '—'}</strong>
+                                    </div>
+                                </td>
+                                <td><StarRating rating={r.rating} readOnly size="sm" /></td>
+                                <td className="cell-clip muted">{r.body}</td>
+                                <td className="muted">{r.images?.length || 0}</td>
+                                <td className="muted">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                                <td className="actions">
+                                    <Button size="sm" variant="danger-ghost" iconOnly aria-label={`Delete review by ${r.author?.username || 'unknown'}`}
+                                        loading={busyId === r._id} onClick={() => setConfirmReview(r)} disabled={busyId === r._id}>
+                                        <Icon name="trash" size={14} />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            )}
+
+            <Pagination page={page} pages={pages} total={total} onChange={setPage} label="Reviews pagination" />
         </div>
     );
 };

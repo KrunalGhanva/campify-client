@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './index.css';
-import './styles/app.css';
+import './styles/tokens.css';
+import './styles/base.css';
+import './styles/ui.css';
+import './styles/layout.css';
+import './styles/pages.css';
 
 import { AuthProvider } from './context/AuthContext';
 import { FlashProvider } from './context/FlashContext';

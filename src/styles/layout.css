@@ -1,0 +1,54 @@
+/* App shell: navbar, footer, admin shell. */
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.shell > main { flex: 1; width: 100%; }
+
+/* ── Navbar ─────────────────────────────────────────── */
+.nav { position: sticky; top: 0; z-index: 100; background: var(--paper); border-bottom: 1px solid var(--line); }
+.nav__bar { display: flex; align-items: center; gap: var(--s-5); min-height: var(--nav-h); }
+.brand { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink); text-decoration: none; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 500; letter-spacing: -0.02em; }
+.brand:hover { color: var(--ink); }
+.brand .icon { color: var(--forest); }
+.nav__toggle { margin-left: auto; }
+.nav__menu { display: none; position: absolute; top: var(--nav-h); left: 0; right: 0; background: var(--paper); border-bottom: 1px solid var(--line); padding: var(--s-3) var(--gutter) var(--s-4); flex-direction: column; gap: var(--s-1); }
+.nav__menu.is-open { display: flex; }
+.nav__links, .nav__auth { display: flex; flex-direction: column; gap: var(--s-1); list-style: none; margin: 0; padding: 0; }
+.nav__auth { border-top: 1px solid var(--line); margin-top: var(--s-2); padding-top: var(--s-3); }
+.nav__link { display: flex; align-items: center; gap: var(--s-2); min-height: 36px; padding: 0 var(--s-3); border-radius: var(--r-sm); color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+.nav__link:hover { color: var(--ink); background: var(--forest-tint); }
+.nav__link.active { color: var(--ink); background: var(--forest-tint); }
+.nav__user { display: flex; align-items: center; gap: var(--s-2); }
+.avatar { width: 24px; height: 24px; border-radius: var(--r-full); object-fit: cover; background: var(--line); flex: none; }
+.avatar--md { width: 32px; height: 32px; }
+.avatar--lg { width: 96px; height: 96px; }
+@media (min-width: 840px) {
+  .nav__toggle { display: none; }
+  .nav__menu { display: flex; position: static; flex: 1; flex-direction: row; align-items: center; padding: 0; border: 0; background: none; gap: var(--s-4); }
+  .nav__links, .nav__auth { flex-direction: row; align-items: center; }
+  .nav__links { flex: 1; }
+  .nav__auth { border: 0; margin: 0; padding: 0; gap: var(--s-2); }
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+.footer { border-top: 1px solid var(--line); background: var(--paper); color: var(--ink-muted); }
+.footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-4); padding-block: var(--s-5); }
+.footer__links { display: flex; flex-wrap: wrap; gap: var(--s-4); list-style: none; margin: 0; padding: 0; }
+.footer a { color: var(--ink-muted); }
+.footer a:hover { color: var(--ink); }
+
+/* ── Admin shell ────────────────────────────────────── */
+.adm { min-height: 100vh; display: flex; flex-direction: column; background: var(--paper); }
+.adm__top { display: flex; align-items: center; gap: var(--s-3); min-height: var(--nav-h); padding: 0 var(--gutter); border-bottom: 1px solid var(--line); background: var(--paper); position: sticky; top: 0; z-index: 100; }
+.adm__tag { font: 500 var(--text-xs)/1 var(--font-ui); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 3px 6px; }
+.adm__spacer { flex: 1; }
+.adm__who { display: none; }
+.adm__body { flex: 1; display: flex; flex-direction: column; }
+.adm__nav { display: flex; gap: var(--s-1); overflow-x: auto; padding: var(--s-2) var(--gutter); border-bottom: 1px solid var(--line); }
+.adm__nav .nav__link { white-space: nowrap; }
+.adm__main { flex: 1; min-width: 0; padding: var(--s-5) var(--gutter) var(--s-8); max-width: calc(var(--content-w) + 2 * var(--gutter)); width: 100%; margin: 0 auto; }
+@media (min-width: 900px) {
+  .adm__who { display: inline; color: var(--ink-muted); }
+  .adm__body { flex-direction: row; }
+  .adm__nav { flex-direction: column; width: 220px; flex: none; overflow: visible; border-bottom: 0; border-right: 1px solid var(--line); padding: var(--s-4) var(--s-3); }
+  .adm__main { margin: 0; max-width: none; padding: var(--s-6) var(--s-6) var(--s-8); }
+}

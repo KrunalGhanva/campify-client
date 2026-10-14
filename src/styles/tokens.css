@@ -1,0 +1,50 @@
+/* Campify design tokens — single source of truth for colour, type, space, radius. */
+:root {
+  /* Colour */
+  --paper:         #FAF8F4;
+  --surface:       #FFFFFF;
+  --ink:           #1F2421;
+  --ink-muted:     #5F625B;
+  --line:          #E4DFD5;
+  --line-strong:   #8C8F86;
+  --forest:        #2F5D46;
+  --forest-hover:  #264B39;
+  --forest-tint:   #E8EFE9;
+  --clay:          #A64B1B;
+  --danger:        #B42318;
+  --danger-tint:   #FBEAE8;
+  --success:       #2F6B3F;
+  --success-tint:  #E8F1EA;
+  --warning:       #8A5A00;
+  --warning-tint:  #FDF3DC;
+  --overlay:       rgba(31, 36, 33, 0.55);
+
+  /* Type */
+  --font-ui:      'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --text-xs:  0.75rem;   /* 12 */
+  --text-sm:  0.875rem;  /* 14 — body */
+  --text-md:  1rem;      /* 16 */
+  --text-lg:  1.25rem;   /* 20 */
+  --text-xl:  1.75rem;   /* 28 */
+  --text-2xl: 2.5rem;    /* 40 */
+
+  /* Space (4px scale) */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+
+  /* Radius */
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-full: 9999px;
+
+  /* Elevation — modals and toast only */
+  --shadow-pop: 0 8px 24px rgba(31, 36, 33, 0.14), 0 1px 3px rgba(31, 36, 33, 0.1);
+
+  /* Layout */
+  --content-w: 1120px;
+  --gutter: 16px;
+  --nav-h: 56px;
+  --focus: 0 0 0 2px var(--paper), 0 0 0 4px var(--forest);
+}
+@media (min-width: 768px) { :root { --gutter: 24px; } }

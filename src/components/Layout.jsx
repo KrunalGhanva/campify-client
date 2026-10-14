@@ -6,13 +6,14 @@ import { Outlet } from 'react-router-dom';
 
 const Layout = () => {
     return (
-        <div className="d-flex flex-column vh-100">
+        <div className="shell">
+            <a className="skip-link" href="#main">Skip to content</a>
             <Navbar />
-            <main className="container mt-5 mb-5 flex-grow-1">
-                <FlashMessage />
+            <main id="main" className="wrap page">
                 <Outlet />
             </main>
             <Footer />
+            <FlashMessage />
             {/* Campify AI assistant — visible on all public pages */}
             <ChatWidget />
         </div>

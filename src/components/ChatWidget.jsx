@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router-dom';
+import Icon from './ui/Icon';
 import './chatWidget.css';
 
 const CHATBOT_URL = import.meta.env.VITE_CHATBOT_URL || 'http://localhost:4000';
 
 const SUGGESTIONS = [
-  '🌟 Best rated campgrounds?',
-  '💰 Cheap camping under $25/night',
-  '🏕️ Tips for a first camping trip',
-  '🐾 Pet-friendly campgrounds?',
+  'Best rated campgrounds?',
+  'Cheap camping under $25/night',
+  'Tips for a first camping trip',
+  'Pet-friendly campgrounds?',
 ];
 
 const GREETING = {
   role: 'assistant',
   content:
-    "Hi, I'm **Trailie** 🏕️ — your Campify camping assistant!\n\nAsk me to find campgrounds, summarise reviews, or give you camping tips.",
+    "Hi, I'm **Trailie**, your Campify camping assistant.\n\nAsk me to find campgrounds, summarise reviews, or give you camping tips.",
 };
 
 // ── Safe inline Markdown renderer ─────────────────────────────
@@ -186,11 +187,11 @@ export default function ChatWidget() {
         {/* Header */}
         <div className="cw-header">
           <div className="cw-header-info">
-            <span className="cw-avatar">🏕️</span>
+            <span className="cw-avatar" aria-hidden="true"><Icon name="tent" size={18} /></span>
             <div>
               <div className="cw-header-name">Trailie</div>
               <div className="cw-header-status">
-                {loading ? 'Thinking…' : 'Camp Assistant · Online'}
+                {loading ? 'Thinking…' : 'Camping assistant'}
               </div>
             </div>
           </div>
@@ -199,14 +200,14 @@ export default function ChatWidget() {
             onClick={() => setOpen(false)}
             aria-label="Close chat"
           >
-            ×
+            <Icon name="x" size={16} />
           </button>
         </div>
 
         {/* Detail-page context banner */}
         {onDetailPage && (
           <div className="cw-context-banner">
-            📍 Viewing this campground — ask me anything about it!
+            <Icon name="pin" size={14} /> You’re viewing this campground. Ask me anything about it.
           </div>
         )}
 
@@ -257,10 +258,7 @@ export default function ChatWidget() {
             disabled={loading || !input.trim()}
             aria-label="Send message"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <Icon name="send" size={18} />
           </button>
         </div>
       </div>
@@ -273,8 +271,8 @@ export default function ChatWidget() {
         aria-label={open ? 'Close camping assistant' : 'Open camping assistant'}
         aria-expanded={open}
       >
-        <span className="cw-fab-icon cw-fab-icon--chat" aria-hidden="true">🏕️</span>
-        <span className="cw-fab-icon cw-fab-icon--close" aria-hidden="true">×</span>
+        <span className="cw-fab-icon cw-fab-icon--chat" aria-hidden="true"><Icon name="chat" size={24} /></span>
+        <span className="cw-fab-icon cw-fab-icon--close" aria-hidden="true"><Icon name="x" size={22} /></span>
       </button>
     </>
   );
